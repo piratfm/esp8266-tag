@@ -24,7 +24,7 @@ void ICACHE_FLASH_ATTR network_send_stat();
 struct ping_option pingopts;
 
 
-static uint8_t mac_to_check[6] = MAC_TO_FIND;
+static const uint8_t mac_to_check[6] = MAC_TO_FIND;
 
 uint8_t network_retry_count=0;
 uint8_t nslookup_retry_count=0;
@@ -64,9 +64,12 @@ static void ICACHE_FLASH_ATTR my_dev_not_found(void)
 static int dev_is_found = 0;
 static void ICACHE_FLASH_ATTR save_my_dev(uint16_t ip_id)
 {
-    if(!(alive_ips[ip_id].mac[0] == mac_to_check[0] && alive_ips[ip_id].mac[1] == mac_to_check[1] && alive_ips[ip_id].mac[2] == mac_to_check[2] &&
-       alive_ips[ip_id].mac[3] == mac_to_check[3] && alive_ips[ip_id].mac[4] == mac_to_check[4] && alive_ips[ip_id].mac[5] == mac_to_check[6]))
-        return;
+    uint8_t mac_octet, not_found=0;
+    for(mac_octet=0;mac_octet<6;mac_octet++)
+        if(alive_ips[ip_id].mac[mac_octet] != mac_to_check[mac_octet])
+            not_found=1;
+
+    if(not_found) return;
 
     os_printf(", IS FOUND!");
     dev_is_found = 1;
@@ -171,6 +174,14 @@ loop(os_event_t *events)
 
     if(network_retry_count > 10 || nslookup_retry_count > 5 || stats_sent > 0) {
         os_printf("Sleeping deeply...\r\n");
+        if(( target_not_found_times > 0 && target_seen_times == 0 && (target_not_found_times % FULL_SCAN_PERIOD == 0)) ||
+           (target_seen_times > 0 && (target_seen_times % FULL_SCAN_PERIOD == 0))) {
+            os_printf("Next start will be with RF calibration\r\n");
+            system_deep_sleep_set_option(0);
+        } else {
+            system_deep_sleep_set_option(3);
+        }
+
         if(target_not_found_times > 10) {
             system_deep_sleep(DEEP_SLEEP_TIME_HIGH);
         } else {
@@ -250,8 +261,6 @@ static void ICACHE_FLASH_ATTR networkRecvCb(void *arg, char *data, unsigned shor
   espconn_disconnect(conn);
 }
 
-
-
 static void ICACHE_FLASH_ATTR networkConnectedCb(void *arg) {
 
   os_printf("conn\r\n");
@@ -259,7 +268,7 @@ static void ICACHE_FLASH_ATTR networkConnectedCb(void *arg) {
 
   char *data = (char *)os_malloc(alive_ips_num * (4*3 + 3 + 1 + 7*3) + 256);
 
-  os_sprintf(data,"GET /input/" TRACKING_PUBKEY "?private_key=" TRACKING_PRIVKEY "&presence=%d,%d&existance=", target_seen_times, target_not_found_times);
+  os_sprintf(data,"GET /input/" TRACKING_PUBKEY "?private_key=" TRACKING_PRIVKEY "&presence=%d,%d,%d&existance=", target_seen_times, target_not_found_times, readvdd33());
 
   uint16_t ip_id;
   for(ip_id=0; ip_id < alive_ips_num; ip_id++) {

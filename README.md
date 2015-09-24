@@ -36,11 +36,13 @@ element[2]: MAC-address of alive host.
 element[3]: ip-address of alive host.
 
 
-    presence = 1,51
+    presence = 1,51,3428
 
 number[0]: counter of succcessfully founded of searched MAC.
 
 number[1]: counter of unsucccessful scans (will be resetted when MAC been found).
+
+number[2]: voltage of battery.
 
 
 Scanning is doing unotil whole sublent scanned or until searched MAC is found.
@@ -49,7 +51,7 @@ Scanning is doing unotil whole sublent scanned or until searched MAC is found.
 ### Example of PARTIAL SCAN data:
 
     existance = 03,00:08:01:02:03:08,192.168.0.6
-    presence = 17,0
+    presence = 17,0,3432
 
 
 
