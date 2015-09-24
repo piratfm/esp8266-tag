@@ -1,7 +1,7 @@
 # esp8266-tag
 Simple WiFi MAC tracking tag.
 
-This software for esp8266 module tracks specific MAC-address existance on the local network and send stats to data collector.
+This software for esp8266 module periodically tracks specific MAC-address existance on the local network and send stats to data collector. Default - is once per 5 minute if host is alive and once per 10 minutes if host is down. At other time device going to deep sleep mode and eats 70uA of the battery (GPIO16 must be connected to RESET pin).
 
 
 use user_config.h to set needed parameters, like wifi network params,  target mac to search, timing, stats collector keys.
